@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "QiskitTranspiler"
+version = "0.1.0"         
+description = "My custom Qiskit transpiler"
+requires-python = ">=3.9"
+
+[tool.setuptools.packages.find]
+where = ["src"]  
+exclude = ["tests*", "notebooks*", "scripts*"]
