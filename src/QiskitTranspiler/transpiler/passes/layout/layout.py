@@ -1,4 +1,4 @@
-from VF2 import VF2, Graph, find_subgraph_match
+from QiskitTranspiler.transpiler.passes.layout.VF2 import VF2, Graph, find_subgraph_match
 import matplotlib.pyplot as plt
 import networkx as nx  # optional, easier layout
 
