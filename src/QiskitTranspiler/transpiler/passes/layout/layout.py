@@ -1,4 +1,6 @@
 from QiskitTranspiler.transpiler.passes.layout.VF2 import VF2, Graph, find_subgraph_match
+from QiskitTranspiler.transpiler.passes.layout.DAG import DAG
+from qiskit import QuantumCircuit
 import matplotlib.pyplot as plt
 import networkx as nx  # optional, easier layout
 
@@ -44,3 +46,30 @@ class Layout:
                 G1.add_edge(idx0, idx1)
         
         return find_subgraph_match(G1, G2)
+    
+
+    def circuit_to_DAG(circuit : QuantumCircuit) -> DAG:
+        dag = DAG()
+        last_gate_on_qubit = {}
+        id_counter = 0
+        for instrunction in circuit.data:
+            qargs = instrunction.qubits
+            if len(qargs) == 2:  # two-qubit gate
+                q0, q1 = qargs
+                idx0, _ = circuit.find_bit(q0)
+                idx1, _ = circuit.find_bit(q1)
+                gate_id = f"g{id_counter}"
+                id_counter += 1
+                dag.add_node(gate_id, data=instrunction.operation)
+                
+                # Add edges from last gates on these qubits to this gate
+                if idx0 in last_gate_on_qubit:
+                    dag.add_edge(last_gate_on_qubit[idx0], gate_id)
+                if idx1 in last_gate_on_qubit:
+                    dag.add_edge(last_gate_on_qubit[idx1], gate_id)
+                
+                # Update last gate on these qubits
+                last_gate_on_qubit[idx0] = gate_id
+                last_gate_on_qubit[idx1] = gate_id
+        
+        return dag
