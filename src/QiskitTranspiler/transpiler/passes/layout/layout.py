@@ -35,7 +35,8 @@ class Layout:
             G1.add_node(idx)
 
         # Add edges for every 2-qubit gate
-        for instr, qargs, cargs in qc.data:
+        for instrunction in qc.data:
+            qargs = instrunction.qubits
             if len(qargs) == 2:  # two-qubit gate
                 q0, q1 = qargs
                 idx0, _ = qc.find_bit(q0)
