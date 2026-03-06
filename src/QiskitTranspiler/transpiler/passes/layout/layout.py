@@ -1,8 +1,10 @@
+import random
+
 from QiskitTranspiler.transpiler.passes.layout.VF2 import VF2, Graph, find_subgraph_match
 from QiskitTranspiler.transpiler.passes.layout.DAG import DAG
 from qiskit import QuantumCircuit
 import matplotlib.pyplot as plt
-import networkx as nx  # optional, easier layout
+import networkx as nx 
 
 
 class Layout:
@@ -73,3 +75,28 @@ class Layout:
                 last_gate_on_qubit[idx1] = gate_id
         
         return dag
+
+    def get_initial_mapping(dag: DAG, backend, qc: QuantumCircuit):
+        # Randomly assign first qubit, then use BFS to assign the rest based on connectivity
+        random_initial_qubit = random.randint(0, backend.num_qubits - 1)
+        mapping = {}
+        mapping[0] = random_initial_qubit
+
+        total_nodes_visited = 0
+        visited = set()
+        queue = [random_initial_qubit]  # Start BFS from the first qubit
+
+        while queue and total_nodes_visited < qc.num_qubits:
+            current_qubit = queue.pop(0)
+            visited.add(current_qubit)
+            mapping[total_nodes_visited] = current_qubit
+            total_nodes_visited += 1
+            
+            # Find neighbors of the current qubit in the coupling map
+            for edge in backend.coupling_map:
+                if current_qubit in edge:
+                    neighbor = edge[1] if edge[0] == current_qubit else edge[0]
+                    if neighbor not in visited and neighbor not in queue:
+                        queue.append(neighbor)
+
+        return mapping
