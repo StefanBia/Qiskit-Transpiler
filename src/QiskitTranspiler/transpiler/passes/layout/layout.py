@@ -2,6 +2,7 @@ import random
 
 from QiskitTranspiler.transpiler.passes.layout.VF2 import VF2, Graph, find_subgraph_match
 from QiskitTranspiler.transpiler.passes.layout.DAG import DAG
+from QiskitTranspiler.transpiler.passes.layout.floyd_w import FloydWarshall
 from qiskit import QuantumCircuit
 import matplotlib.pyplot as plt
 import networkx as nx 
@@ -25,6 +26,25 @@ class Layout:
 
     @staticmethod
     def run_layout(qc, backend):
+        is_isomorphic, mapping = Layout.initial_isomorphism(qc, backend)
+        if is_isomorphic:
+            return mapping
+        
+        mapping = Layout.get_initial_mapping(Layout.circuit_to_DAG(qc), backend, qc)
+
+        dag = Layout.circuit_to_DAG(qc)
+
+        fw_complex = FloydWarshall(backend)
+        dist_matrix = fw_complex.dist
+
+        front_layer = [node for node in dag.nodes if not dag.get_predecessors(node)]
+        # print(front_layer)
+
+        #----------------- With all input data, we can start SABRE
+        return mapping
+    
+    @staticmethod
+    def initial_isomorphism(qc, backend):
         G1 = Graph()
         G2 = Graph()
 
@@ -49,7 +69,7 @@ class Layout:
         
         return find_subgraph_match(G1, G2)
     
-
+    @staticmethod
     def circuit_to_DAG(circuit : QuantumCircuit) -> DAG:
         dag = DAG()
         last_gate_on_qubit = {}
@@ -76,6 +96,7 @@ class Layout:
         
         return dag
 
+    @staticmethod
     def get_initial_mapping(dag: DAG, backend, qc: QuantumCircuit):
         # Randomly assign first qubit, then use BFS to assign the rest based on connectivity
         random_initial_qubit = random.randint(0, backend.num_qubits - 1)
@@ -91,7 +112,7 @@ class Layout:
             visited.add(current_qubit)
             mapping[total_nodes_visited] = current_qubit
             total_nodes_visited += 1
-            
+
             # Find neighbors of the current qubit in the coupling map
             for edge in backend.coupling_map:
                 if current_qubit in edge:
