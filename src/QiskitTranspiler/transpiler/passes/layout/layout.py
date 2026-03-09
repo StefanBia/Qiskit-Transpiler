@@ -6,6 +6,7 @@ from QiskitTranspiler.transpiler.passes.layout.floyd_w import FloydWarshall
 from qiskit import QuantumCircuit
 import matplotlib.pyplot as plt
 import networkx as nx 
+from QiskitTranspiler.transpiler.passes.layout.sabre import sabre
 
 
 class Layout:
@@ -41,6 +42,7 @@ class Layout:
         # print(front_layer)
 
         #----------------- With all input data, we can start SABRE
+        sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag)
         return mapping
     
     @staticmethod
@@ -82,7 +84,7 @@ class Layout:
                 idx1, _ = circuit.find_bit(q1)
                 gate_id = f"g{id_counter}"
                 id_counter += 1
-                dag.add_node(gate_id, data=instrunction.operation)
+                dag.add_node(gate_id, data=instrunction.operation, qubits=[idx0, idx1])
                 
                 # Add edges from last gates on these qubits to this gate
                 if idx0 in last_gate_on_qubit:
