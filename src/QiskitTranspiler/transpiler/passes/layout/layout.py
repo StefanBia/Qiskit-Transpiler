@@ -39,7 +39,6 @@ class Layout:
         dist_matrix = fw_complex.dist
 
         front_layer = [node for node in dag.nodes if not dag.get_predecessors(node)]
-        # print(front_layer)
 
         #----------------- With all input data, we can start SABRE
         sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag)
