@@ -1,4 +1,5 @@
 import random
+from pprint import pprint
 
 from QiskitTranspiler.transpiler.passes.layout.VF2 import VF2, Graph, find_subgraph_match
 from QiskitTranspiler.transpiler.passes.layout.DAG import DAG
@@ -7,6 +8,8 @@ from qiskit import QuantumCircuit
 import matplotlib.pyplot as plt
 import networkx as nx 
 from QiskitTranspiler.transpiler.passes.layout.sabre import sabre
+from qiskit.transpiler import CouplingMap
+from qiskit.providers.fake_provider import GenericBackendV2
 
 
 class Layout:
@@ -33,15 +36,42 @@ class Layout:
         
         mapping = Layout.get_initial_mapping(Layout.circuit_to_DAG(qc), backend, qc)
 
-        dag = Layout.circuit_to_DAG(qc)
+        # We convert the initial mapping to a backend representation so we can apply floyd warshall on it
+        nr_qubits = 0
+        for qubit, mapped_qubit in mapping.items():
+            nr_qubits  += 1
 
-        fw_complex = FloydWarshall(backend)
+        coupling_list = []
+        # Create inverse mapping for O(1) lookups: {physical_qubit: virtual_qubit}
+        inverse_mapping = {v: k for k, v in mapping.items()}
+        for x, y in backend.coupling_map:
+            if x in inverse_mapping and y in inverse_mapping:
+                coupling_list.append([inverse_mapping[x], inverse_mapping[y]])
+
+        coupling_map = CouplingMap(couplinglist=coupling_list)
+        backend_mapped_qubits = GenericBackendV2(
+            num_qubits=nr_qubits,
+            basis_gates=[], 
+            coupling_map=coupling_map
+        )
+
+        fw_complex = FloydWarshall(backend_mapped_qubits)
+        
+        dag = Layout.circuit_to_DAG(qc)
+        
         dist_matrix = fw_complex.dist
 
+        # The front layer is the set of gates with no predecessors, stored as a list of node ids.
         front_layer = [node for node in dag.nodes if not dag.get_predecessors(node)]
 
+        # print("Initial mapping:")
+        # pprint(mapping)
+        
+        # print("\nDistance matrix:")
+        # print(dist_matrix.__str__())
+
         #----------------- With all input data, we can start SABRE
-        sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag)
+        sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag, fw=fw_complex)
         return mapping
     
     @staticmethod
@@ -100,6 +130,8 @@ class Layout:
     @staticmethod
     def get_initial_mapping(dag: DAG, backend, qc: QuantumCircuit):
         # Randomly assign first qubit, then use BFS to assign the rest based on connectivity
+        # Mapping is of type {virtual_qubit: physical_qubit}
+        # Ensures 1:1 mapping - no virtual qubits map to the same physical qubit
         random_initial_qubit = random.randint(0, backend.num_qubits - 1)
         mapping = {}
         mapping[0] = random_initial_qubit
@@ -121,4 +153,8 @@ class Layout:
                     if neighbor not in visited and neighbor not in queue:
                         queue.append(neighbor)
 
+        # Validate 1:1 mapping constraint
+        physical_qubits = list(mapping.values())
+        assert len(physical_qubits) == len(set(physical_qubits)), "1:1 mapping constraint violated: duplicate physical qubits"
+        
         return mapping
