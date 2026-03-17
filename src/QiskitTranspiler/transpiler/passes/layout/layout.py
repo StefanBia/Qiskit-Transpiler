@@ -64,12 +64,6 @@ class Layout:
         # The front layer is the set of gates with no predecessors, stored as a list of node ids.
         front_layer = [node for node in dag.nodes if not dag.get_predecessors(node)]
 
-        # print("Initial mapping:")
-        # pprint(mapping)
-        
-        # print("\nDistance matrix:")
-        # print(dist_matrix.__str__())
-
         #----------------- With all input data, we can start SABRE
         sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag, fw=fw_complex)
         return mapping
@@ -104,15 +98,16 @@ class Layout:
     def circuit_to_DAG(circuit : QuantumCircuit) -> DAG:
         dag = DAG()
         last_gate_on_qubit = {}
-        id_counter = 0
+        id_counter_two_qubit = 0
+        id_counter_one_qubit = 0
         for instrunction in circuit.data:
             qargs = instrunction.qubits
             if len(qargs) == 2:  # two-qubit gate
                 q0, q1 = qargs
                 idx0, _ = circuit.find_bit(q0)
                 idx1, _ = circuit.find_bit(q1)
-                gate_id = f"g{id_counter}"
-                id_counter += 1
+                gate_id = f"g{id_counter_two_qubit}"
+                id_counter_two_qubit += 1
                 dag.add_node(gate_id, data=instrunction.operation, qubits=[idx0, idx1])
                 
                 # Add edges from last gates on these qubits to this gate
@@ -124,6 +119,19 @@ class Layout:
                 # Update last gate on these qubits
                 last_gate_on_qubit[idx0] = gate_id
                 last_gate_on_qubit[idx1] = gate_id
+            if len(qargs) == 1:  # single-qubit gate
+                q0 = qargs[0]
+                idx0, _ = circuit.find_bit(q0)
+                gate_id = f"o{id_counter_one_qubit}"
+                id_counter_one_qubit += 1
+                dag.add_node(gate_id, data=instrunction.operation, qubits=[idx0])
+                
+                # Add edge from last gate on this qubit to this gate
+                if idx0 in last_gate_on_qubit:
+                    dag.add_edge(last_gate_on_qubit[idx0], gate_id)
+                
+                # Update last gate on this qubit
+                last_gate_on_qubit[idx0] = gate_id
         
         return dag
 
