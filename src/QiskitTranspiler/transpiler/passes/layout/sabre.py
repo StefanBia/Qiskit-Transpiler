@@ -22,8 +22,8 @@ def sabre(front_layer, coupling_map, mapping, distrance_matrix, dag, fw: FloydWa
     swaps = []
     while front_layer:
         best_swap = None
-        print('\n-----------------------------------------------------------\n')
-        print('We enter the while loop, front_layer:', front_layer)
+        # print('\n-----------------------------------------------------------\n')
+        # print('We enter the while loop, front_layer:', front_layer)
         execute_gate_list = []
         for node_id in front_layer:
             qargs = dag.qubits[node_id]
@@ -37,7 +37,7 @@ def sabre(front_layer, coupling_map, mapping, distrance_matrix, dag, fw: FloydWa
             else:  # single-qubit gate
                 execute_gate_list.append(node_id)
         
-        print("Executable gates in front layer:", execute_gate_list)
+        # print("Executable gates in front layer:", execute_gate_list)
 
         if execute_gate_list:
             for node_id in execute_gate_list:
@@ -60,10 +60,10 @@ def sabre(front_layer, coupling_map, mapping, distrance_matrix, dag, fw: FloydWa
             best_swap = min_score_nodes[0]
             
             idx0, idx1 = dag.qubits[best_swap]
-            print("Node with minimum score:", best_swap)
+            # print("Node with minimum score:", best_swap)
 
             min_path = fw.get_path(layout[idx0], layout[idx1])
-            print("Shortest path between qubits", idx0, "and", idx1, ":", min_path)
+            # print("Shortest path between qubits", idx0, "and", idx1, ":", min_path)
 
             # print("layout before swaps:", layout)
             # print("reverse_layout before swaps:", reverse_layout)
@@ -77,13 +77,13 @@ def sabre(front_layer, coupling_map, mapping, distrance_matrix, dag, fw: FloydWa
                 swaps.append((best_swap, (v0, v1)))
                 layout[v0], layout[v1] = layout[v1], layout[v0]
                 reverse_layout[p0], reverse_layout[p1] = reverse_layout[p1], reverse_layout[p0]
-                print("Performing swap:", (v0, v1))
+                # print("Performing swap:", (v0, v1))
                 # print("layout:", layout)
                 # print("reverse_layout:", reverse_layout)
 
             # this should be 1 after the swaps
             # print("New distance between qubits", idx0, "and", idx1, "after swaps:", distrance_matrix[layout[idx0]][layout[idx1]])
 
-    print("Done yuppie\n")     
+    # print("Done yuppie\n")     
 
     return swaps

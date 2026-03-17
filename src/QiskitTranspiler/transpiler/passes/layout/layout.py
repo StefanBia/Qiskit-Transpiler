@@ -65,7 +65,14 @@ class Layout:
         front_layer = [node for node in dag.nodes if not dag.get_predecessors(node)]
 
         #----------------- With all input data, we can start SABRE
-        sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag, fw=fw_complex)
+        swaps = sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag, fw=fw_complex)
+        
+        for swap in swaps:
+            (v0, v1) = swap[1]
+            dep = swap[0]
+            print("Performing swap:", (v0, v1), "to resolve dependency:", dep)
+            print('-----------------------------------------------------------\n')
+
         return mapping
     
     @staticmethod
