@@ -56,33 +56,30 @@ def sabre(front_layer, coupling_map, mapping, distrance_matrix, dag, fw: FloydWa
                     score[node_id] = distrance_matrix[layout[idx0]][layout[idx1]]
 
             min_score_nodes = [node_id for node_id, s in score.items() if s == min(score.values())]
-            if len(min_score_nodes) > 1:
-                best_swap = random.choice(min_score_nodes)
-            else:
-                best_swap = min_score_nodes[0]
+        
+            best_swap = min_score_nodes[0]
             
             idx0, idx1 = dag.qubits[best_swap]
-            # print("Node with minimum score:", best_swap)
+            print("Node with minimum score:", best_swap)
 
             min_path = fw.get_path(layout[idx0], layout[idx1])
-            # print("Shortest path between qubits", idx0, "and", idx1, ":", min_path)
+            print("Shortest path between qubits", idx0, "and", idx1, ":", min_path)
 
-            
+            # print("layout before swaps:", layout)
+            # print("reverse_layout before swaps:", reverse_layout)
+
             for i in range(len(min_path) - 2):
                 p0, p1 = min_path[i], min_path[i + 1]
-
-                # find virtual qubits sitting on these physical qubits
                 v0 = reverse_layout[p0]
                 v1 = reverse_layout[p1]
+                # print(f"i={i}: p0={p0}, p1={p1}, v0={v0}, v1={v1}")
 
                 swaps.append((best_swap, (v0, v1)))
-
-                # update both mappings
                 layout[v0], layout[v1] = layout[v1], layout[v0]
                 reverse_layout[p0], reverse_layout[p1] = reverse_layout[p1], reverse_layout[p0]
-
                 print("Performing swap:", (v0, v1))
-                min_path[i + 1] = min_path[i]
+                # print("layout:", layout)
+                # print("reverse_layout:", reverse_layout)
 
             # this should be 1 after the swaps
             # print("New distance between qubits", idx0, "and", idx1, "after swaps:", distrance_matrix[layout[idx0]][layout[idx1]])
