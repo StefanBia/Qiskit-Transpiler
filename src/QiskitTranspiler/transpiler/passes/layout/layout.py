@@ -75,7 +75,7 @@ class Layout:
 
         circuit = Layout.dag_to_circuit(dag,ordered_ex_gates, swaps)
 
-        return circuit
+        return circuit, mapping
     
     @staticmethod
     def initial_isomorphism(qc, backend):
@@ -178,18 +178,23 @@ class Layout:
 
     @staticmethod
     def dag_to_circuit(dag: DAG, ordered_ex_gates: list, swaps: list) -> QuantumCircuit:
-        # Create a new quantum circuit with the same number of qubits as the DAG
         num_qubits = max(qubit for qubits in dag.qubits.values() for qubit in qubits) + 1
+        vmap = [i for i in range(num_qubits)]
         circuit = QuantumCircuit(num_qubits)
-    
+
         for node_id in ordered_ex_gates:
             gate_data = dag.nodes[node_id]
             needed_swaps = [swap for swap in swaps if swap[0] == node_id]
             for swap in needed_swaps:
                 (v0, v1) = swap[1]
-                circuit.swap(v0, v1)
+                circuit.swap(vmap[v0], vmap[v1])
+                # update vmap to reflect the swap
+                vmap[v0], vmap[v1] = vmap[v1], vmap[v0]
+            
             qubits = dag.qubits[node_id]
             if gate_data is not None:
-                circuit.append(gate_data, qubits)
+                # remap qubits through vmap to get current physical locations
+                remapped_qubits = [vmap[q] for q in qubits]
+                circuit.append(gate_data, remapped_qubits)
 
         return circuit
