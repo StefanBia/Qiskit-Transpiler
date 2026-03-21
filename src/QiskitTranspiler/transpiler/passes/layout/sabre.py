@@ -86,4 +86,4 @@ def sabre(front_layer, coupling_map, mapping, distrance_matrix, dag, fw: FloydWa
 
     # print("Done yuppie\n")     
 
-    return swaps
+    return swaps, resolved_gates

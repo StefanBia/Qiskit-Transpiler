@@ -65,7 +65,7 @@ class Layout:
         front_layer = [node for node in dag.nodes if not dag.get_predecessors(node)]
 
         #----------------- With all input data, we can start SABRE
-        swaps = sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag, fw=fw_complex)
+        swaps, ordered_ex_gates = sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag, fw=fw_complex)
         
         for swap in swaps:
             (v0, v1) = swap[1]
@@ -73,7 +73,9 @@ class Layout:
             print("Performing swap:", (v0, v1), "to resolve dependency:", dep)
             print('-----------------------------------------------------------\n')
 
-        return mapping
+        circuit = Layout.dag_to_circuit(dag,ordered_ex_gates, swaps)
+
+        return circuit
     
     @staticmethod
     def initial_isomorphism(qc, backend):
@@ -146,7 +148,7 @@ class Layout:
     def get_initial_mapping(dag: DAG, backend, qc: QuantumCircuit):
         # Randomly assign first qubit, then use BFS to assign the rest based on connectivity
         # Mapping is of type {virtual_qubit: physical_qubit}
-        # Ensures 1:1 mapping - no virtual qubits map to the same physical qubit
+        # Ensures no virtual qubits map to the same physical qubit
         random_initial_qubit = random.randint(0, backend.num_qubits - 1)
         mapping = {}
         mapping[0] = random_initial_qubit
@@ -173,3 +175,21 @@ class Layout:
         assert len(physical_qubits) == len(set(physical_qubits)), "1:1 mapping constraint violated: duplicate physical qubits"
         
         return mapping
+
+    @staticmethod
+    def dag_to_circuit(dag: DAG, ordered_ex_gates: list, swaps: list) -> QuantumCircuit:
+        # Create a new quantum circuit with the same number of qubits as the DAG
+        num_qubits = max(qubit for qubits in dag.qubits.values() for qubit in qubits) + 1
+        circuit = QuantumCircuit(num_qubits)
+    
+        for node_id in ordered_ex_gates:
+            gate_data = dag.nodes[node_id]
+            needed_swaps = [swap for swap in swaps if swap[0] == node_id]
+            for swap in needed_swaps:
+                (v0, v1) = swap[1]
+                circuit.swap(v0, v1)
+            qubits = dag.qubits[node_id]
+            if gate_data is not None:
+                circuit.append(gate_data, qubits)
+
+        return circuit
