@@ -111,13 +111,17 @@ class Layout:
         id_counter_one_qubit = 0
         for instrunction in circuit.data:
             qargs = instrunction.qubits
+            cargs = instrunction.clbits
             if len(qargs) == 2:  # two-qubit gate
                 q0, q1 = qargs
                 idx0, _ = circuit.find_bit(q0)
                 idx1, _ = circuit.find_bit(q1)
                 gate_id = f"g{id_counter_two_qubit}"
                 id_counter_two_qubit += 1
-                dag.add_node(gate_id, data=instrunction.operation, qubits=[idx0, idx1])
+
+                cbits = [circuit.find_bit(cbit).index for cbit in instrunction.clbits]
+
+                dag.add_node(gate_id, data=instrunction.operation, qubits=[idx0, idx1], classical_bits=cbits)
                 
                 # Add edges from last gates on these qubits to this gate
                 if idx0 in last_gate_on_qubit:
@@ -133,8 +137,9 @@ class Layout:
                 idx0, _ = circuit.find_bit(q0)
                 gate_id = f"o{id_counter_one_qubit}"
                 id_counter_one_qubit += 1
-                dag.add_node(gate_id, data=instrunction.operation, qubits=[idx0])
-                
+                cbits = [circuit.find_bit(cbit).index for cbit in instrunction.clbits]
+                dag.add_node(gate_id, data=instrunction.operation, qubits=[idx0], classical_bits=cbits)
+
                 # Add edge from last gate on this qubit to this gate
                 if idx0 in last_gate_on_qubit:
                     dag.add_edge(last_gate_on_qubit[idx0], gate_id)
@@ -179,8 +184,12 @@ class Layout:
     @staticmethod
     def dag_to_circuit(dag: DAG, ordered_ex_gates: list, swaps: list) -> QuantumCircuit:
         num_qubits = max(qubit for qubits in dag.qubits.values() for qubit in qubits) + 1
+        num_clbits = max(clbit for clbits in dag.classical_bits.values() for clbit in clbits) + 1
         vmap = [i for i in range(num_qubits)]
-        circuit = QuantumCircuit(num_qubits)
+        circuit = QuantumCircuit(num_qubits, num_clbits)
+
+        # for node_id in ordered_ex_gates:
+        #     print(f"Node: {node_id}, Qubits: {dag.qubits[node_id]}, Classical Bits: {dag.classical_bits[node_id]}, Data: {dag.nodes[node_id]}")
 
         for node_id in ordered_ex_gates:
             gate_data = dag.nodes[node_id]
@@ -190,11 +199,14 @@ class Layout:
                 circuit.swap(vmap[v0], vmap[v1])
                 # update vmap to reflect the swap
                 vmap[v0], vmap[v1] = vmap[v1], vmap[v0]
-            
+        
+            print(f"Nodeid: {node_id}")
             qubits = dag.qubits[node_id]
+            clbits = dag.classical_bits[node_id]
             if gate_data is not None:
                 # remap qubits through vmap to get current physical locations
                 remapped_qubits = [vmap[q] for q in qubits]
-                circuit.append(gate_data, remapped_qubits)
+                circuit.append(gate_data, remapped_qubits, clbits)
+                # print(f"Operation: {gate_data}, Qubits: {remapped_qubits}, Classical bits: {clbits}")
 
         return circuit

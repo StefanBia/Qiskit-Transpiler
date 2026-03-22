@@ -8,10 +8,12 @@ class DAG:
         self.nodes: Dict[Any, Any] = {}
         self.edges: Dict[Any, List[Any]] = {}
         self.qubits: Dict[Any, List[Any]] = {}
+        self.classical_bits: Dict[Any, List[Any]] = {}
     
-    def add_node(self, node_id: Any, data: Any = None, qubits: List[Any] = None) -> None:
+    def add_node(self, node_id: Any, data: Any = None, qubits: List[Any] = None, classical_bits: List[Any] = None) -> None:
         self.nodes[node_id] = data
         self.qubits[node_id] = qubits if qubits is not None else []
+        self.classical_bits[node_id] = classical_bits if classical_bits is not None else []
         if node_id not in self.edges:
             self.edges[node_id] = []
     
