@@ -32,7 +32,7 @@ class Layout:
     def run_layout(qc, backend):
         is_isomorphic, mapping = Layout.initial_isomorphism(qc, backend)
         if is_isomorphic:
-            return mapping
+            return qc, mapping  # No layout needed, return original circuit and mapping
         
         mapping = Layout.get_initial_mapping(Layout.circuit_to_DAG(qc), backend, qc)
 
