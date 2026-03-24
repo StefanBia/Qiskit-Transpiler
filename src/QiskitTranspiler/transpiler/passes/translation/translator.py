@@ -67,12 +67,10 @@ def _translate_gate(
         #     out.delay(params[0], *qubits)
         return
 
-    # Base case: gate is already in the target basis — emit it directly
     if name in target_basis:
         out.append(_build_gate(name, params), qubits)
         return
 
-    # Look up the decomposition rule
     if name not in equivalences:
         raise NotImplementedError(
             f"No equivalence rule for gate '{name}' and it is not in the "
@@ -84,16 +82,12 @@ def _translate_gate(
     rule = equivalences[name]
     decomposed = rule(qubits, params)
 
-    # Recurse into each sub-gate
     for (sub_name, sub_params, sub_qubits) in decomposed:
         _translate_gate(
             out, sub_name, sub_params, sub_qubits,
             equivalences, target_basis, _depth + 1
         )
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
 
 def translate_circuit(
     qc: QuantumCircuit,
@@ -103,17 +97,20 @@ def translate_circuit(
 ) -> QuantumCircuit:
 
     key = backend or (basis if isinstance(basis, str) else None)
+    
 
     if isinstance(basis, (list, set, frozenset)) and not isinstance(basis, str):
         target_basis = frozenset(basis)
         if custom_equivalences is not None:
             equivalences = custom_equivalences
         else:
+            INFRASTRUCTURE_GATES = {"id", "measure", "delay", "reset"}
 
+            basis_gates = frozenset(g for g in target_basis if g not in INFRASTRUCTURE_GATES)
             found = False
             for name, equiv in BASIS_SETS.items():
                 print(f"Checking if target_basis {target_basis} is subset of {name} basis {equiv}...")
-                if target_basis.issubset(equiv):
+                if basis_gates.issubset(equiv):
                     equivalences = EQUIVALENCES_FOR_BASIS[name]
                     print(
                         "[BasisTranslator] Warning: Found a built-in equivalence table that covers the provided custom_basis. "
