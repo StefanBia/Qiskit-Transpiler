@@ -196,7 +196,9 @@ class Layout:
             needed_swaps = [swap for swap in swaps if swap[0] == node_id]
             for swap in needed_swaps:
                 (v0, v1) = swap[1]
-                circuit.swap(vmap[v0], vmap[v1])
+                circuit.cx(v0, v1)
+                circuit.cx(v1, v0)
+                circuit.cx(v0, v1)
                 # update vmap to reflect the swap
                 vmap[v0], vmap[v1] = vmap[v1], vmap[v0]
         
