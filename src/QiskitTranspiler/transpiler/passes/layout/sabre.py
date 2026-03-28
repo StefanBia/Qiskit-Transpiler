@@ -14,7 +14,7 @@ def sabre(front_layer, coupling_map, mapping, distrance_matrix, dag, fw: FloydWa
     Returns:
         swap (tuple): The best swap found, represented as a tuple of physical qubits.
     """
-    print("Distance matrix:\n", distrance_matrix)
+    # print("Distance matrix:\n", distrance_matrix)
 
     resolved_gates = []
     layout = [i for i in range(len(mapping))]

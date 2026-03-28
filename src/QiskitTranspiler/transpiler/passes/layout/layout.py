@@ -67,13 +67,10 @@ class Layout:
         #----------------- With all input data, we can start SABRE
         swaps, ordered_ex_gates = sabre(front_layer=front_layer, coupling_map=backend.coupling_map, mapping=mapping, distrance_matrix=dist_matrix, dag=dag, fw=fw_complex)
         
-        for swap in swaps:
-            (v0, v1) = swap[1]
-            dep = swap[0]
-            print("Performing swap:", (v0, v1), "to resolve dependency:", dep)
-            print('-----------------------------------------------------------\n')
 
-        circuit = Layout.dag_to_circuit(dag,ordered_ex_gates, swaps)
+        circuit = Layout.dag_to_circuit(dag, ordered_ex_gates, swaps)
+
+        circuit = Layout.direction_fix(circuit, backend.coupling_map)
 
         return circuit, mapping
     
@@ -202,7 +199,7 @@ class Layout:
                 # update vmap to reflect the swap
                 vmap[v0], vmap[v1] = vmap[v1], vmap[v0]
         
-            print(f"Nodeid: {node_id}")
+            # print(f"Nodeid: {node_id}")
             qubits = dag.qubits[node_id]
             clbits = dag.classical_bits[node_id]
             if gate_data is not None:
@@ -212,3 +209,24 @@ class Layout:
                 # print(f"Operation: {gate_data}, Qubits: {remapped_qubits}, Classical bits: {clbits}")
 
         return circuit
+
+    def direction_fix(circuit, coupling_map):
+        direction_fixed_qc = QuantumCircuit(circuit.num_qubits, circuit.num_clbits)
+        for instruction in circuit.data:
+            op = instruction.operation
+            qubits = [circuit.find_bit(qubit).index for qubit in instruction.qubits]
+            cbits = [circuit.find_bit(cbit).index for cbit in instruction.clbits]
+            if op.name == "cx":
+                q1, q2 = qubits[0], qubits[1]
+                if (q1, q2) not in coupling_map and (q2, q1) in coupling_map:
+                    direction_fixed_qc.h(q1)
+                    direction_fixed_qc.h(q2)
+                    direction_fixed_qc.cx(q2, q1)
+                    direction_fixed_qc.h(q1)
+                    direction_fixed_qc.h(q2)
+                else:
+                    direction_fixed_qc.append(op, qubits, cbits)
+            else:
+                direction_fixed_qc.append(op, qubits, cbits)
+        
+        return direction_fixed_qc

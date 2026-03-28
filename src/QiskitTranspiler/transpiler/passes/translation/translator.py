@@ -109,22 +109,22 @@ def translate_circuit(
             basis_gates = frozenset(g for g in target_basis if g not in INFRASTRUCTURE_GATES)
             found = False
             for name, equiv in BASIS_SETS.items():
-                print(f"Checking if target_basis {target_basis} is subset of {name} basis {equiv}...")
+                # print(f"Checking if target_basis {target_basis} is subset of {name} basis {equiv}...")
                 if basis_gates.issubset(equiv):
                     equivalences = EQUIVALENCES_FOR_BASIS[name]
                     print(
                         "[BasisTranslator] Warning: Found a built-in equivalence table that covers the provided custom_basis. "
-                        f"Using '{name}' equivalences as fallback."
+                        f"Using '{name}'"
                     )
                     found = True
                     break
             if not found:
                 from QiskitTranspiler.transpiler.passes.translation.equivalence_library import EQUIVALENCES_ECR
                 equivalences = EQUIVALENCES_ECR
-            print(
-                "[BasisTranslator] Warning: custom_basis provided without "
-                "custom_equivalences — using built-in ECR equivalence table as fallback."
-            )
+                print(
+                    "[BasisTranslator] Warning: custom_basis provided without "
+                    "custom_equivalences — using built-in ECR equivalence table as fallback."
+                )
 
     elif key is not None:
         if key not in BASIS_SETS:
