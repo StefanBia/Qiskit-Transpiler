@@ -151,13 +151,13 @@ class Layout:
         # Randomly assign first qubit, then use BFS to assign the rest based on connectivity
         # Mapping is of type {virtual_qubit: physical_qubit}
         # Ensures no virtual qubits map to the same physical qubit
-        random_initial_qubit = random.randint(0, backend.num_qubits - 1)
+        starting_qubit = Layout.compute_best_starting_qubit(backend)
         mapping = {}
-        mapping[0] = random_initial_qubit
+        mapping[0] = starting_qubit
 
         total_nodes_visited = 0
         visited = set()
-        queue = [random_initial_qubit]  # Start BFS from the first qubit
+        queue = [starting_qubit]  # Start BFS from the first qubit
 
         while queue and total_nodes_visited < qc.num_qubits:
             current_qubit = queue.pop(0)
@@ -230,3 +230,49 @@ class Layout:
                 direction_fixed_qc.append(op, qubits, cbits)
         
         return direction_fixed_qc
+
+    def compute_best_starting_qubit(backend):
+
+        coupling_map = backend.coupling_map
+        two_qubit_gate = 'ecr' if 'ecr' in backend.operation_names else 'cz'
+
+        error_map = {}
+        for edge in coupling_map.get_edges():
+            error_map[edge] = backend.target[two_qubit_gate][edge].error
+
+        qubit_scores = {i: 1.0 for i in range(backend.num_qubits)}
+
+        for edge, error in error_map.items():
+            qubit_scores[edge[0]] *= (1 - error)
+            qubit_scores[edge[1]] *= (1 - error)
+
+
+        for i in range(backend.num_qubits):
+            qubit_props = backend.properties().qubit_property(i)
+            readout_error = qubit_props.get("readout_error", (None,))[0]
+            qubit_scores[i] *= (1 - readout_error)
+            qubit_scores[i] *= Layout.bfs_sum_error_depth(i, coupling_map, depth=2, qubit_scores=qubit_scores)
+
+        highest_score_qubit = max(qubit_scores, key=qubit_scores.get)
+        return highest_score_qubit
+
+
+    def bfs_sum_error_depth(start, coupling_map, depth, qubit_scores):
+        visited = set()
+        queue = [(start, 0)]  # (node, current_depth)
+        area_score = 1
+
+        while queue:
+            node, current_depth = queue.pop(0)
+            if node not in visited and current_depth <= depth:
+                visited.add(node)
+                area_score *= qubit_scores[node]
+                
+                neighbor_indices = [n for n in coupling_map.neighbors(node)]
+
+                for neighbor in neighbor_indices:
+                    queue.append((neighbor, current_depth + 1))
+        
+        
+        
+        return area_score
