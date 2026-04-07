@@ -1,5 +1,5 @@
 Average error over 50 runs (My transpiler): 0.0197265625 (IBM_Fez Simulator)
-Average error over 50 runs (Qiskit transpiler):  (IBM_Fez Simulator)
+Average error over 50 runs (Qiskit transpiler): 0.02072265625 (IBM_Fez Simulator)
 
 IDs for 10 runs on real IBM_Fez my transpiler:
 Job ID: d7ac4b0eecps73d9akdg
