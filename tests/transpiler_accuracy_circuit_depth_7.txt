@@ -27,4 +27,4 @@ Job ID: d7aefhak86tc73a1gr50
 Job ID: d7aefhjc6das739k43tg
 Job ID: d7aefhqk86tc73a1gr6g
 
-Average error over runs: 0.50361328125
+Average error over runs: 0.04736328125
