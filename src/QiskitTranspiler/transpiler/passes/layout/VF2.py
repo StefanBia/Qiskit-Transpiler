@@ -40,7 +40,7 @@ class VF2:
         # Rule 1: If terminal sets are not empty, pick one u from T1 and all v from T2
         if state.T1 and state.T2:
             u = min(state.T1)
-            for v in state.T2:
+            for v in list(state.T2): 
                 yield u, v
         # Rule 2: If terminal sets are empty, pick u from G1 nodes not in M
         else:
