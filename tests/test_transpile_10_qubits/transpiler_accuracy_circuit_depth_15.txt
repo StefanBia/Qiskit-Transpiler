@@ -1,0 +1,30 @@
+Average error over 50 runs (My transpiler): 0.1653515625 (IBM_Fez Simulator)
+Average error over 50 runs (Qiskit transpiler): 0.12734375 (IBM_Fez Simulator)
+
+IDs for 10 runs on real IBM_Fez my transpiler:
+Job ID: d7ebrth5a5qc73dqp320
+Job ID: d7ebrtu5nvhs73a6ivhg
+Job ID: d7ebru15a5qc73dqp330
+Job ID: d7ebru95a5qc73dqp33g
+Job ID: d7ebrujklj2c73f2j9t0
+Job ID: d7ebrur0g7hs73dsr4v0
+Job ID: d7ebrv15a5qc73dqp35g
+Job ID: d7ebrvb0g7hs73dsr50g
+Job ID: d7ebrvh5a5qc73dqp37g
+Job ID: d7ebrvp5a5qc73dqp390
+
+Average error over runs: 0.321484375
+
+IDs for 10 runs on real IBM_Fez Qiskit transpiler:
+Job ID: d7ebvpr0g7hs73dsr8t0
+Job ID: d7ebvq3klj2c73f2jdn0
+Job ID: d7ebvq95a5qc73dqp7dg
+Job ID: d7ebvqm5nvhs73a6j3ig
+Job ID: d7ebvqr0g7hs73dsr8v0
+Job ID: d7ebvr65nvhs73a6j3j0
+Job ID: d7ebvr95a5qc73dqp7fg
+Job ID: d7ebvrj0g7hs73dsr900
+Job ID: d7ebvrh5a5qc73dqp7gg
+Job ID: d7ebvrp5a5qc73dqp7h0
+
+Average error over runs: 0.25712890625
