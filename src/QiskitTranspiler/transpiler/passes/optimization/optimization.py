@@ -62,7 +62,7 @@ def merge_rz_rotations(qc: QuantumCircuit) -> QuantumCircuit:
     return out
 
 
-def cancel_two_qubit_gates(qc: QuantumCircuit) -> QuantumCircister:
+def cancel_two_qubit_gates(qc: QuantumCircuit) -> QuantumCircuit:
 
     CANCELLABLE = {'cx', 'ecr', 'cz'}
     
