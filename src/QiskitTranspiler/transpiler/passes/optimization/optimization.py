@@ -1,6 +1,28 @@
 from qiskit import QuantumCircuit
 import numpy as np
 
+"""
+optimization.py
+
+Gate-level optimization pass.
+
+Applies local algebraic simplifications to reduce gate count while
+exactly preserving the circuit's unitary:
+    - X cancellation:          X · X = I
+    - RZ merging:               RZ(θ) · RZ(φ) = RZ(θ + φ)
+    - Two-qubit gate cancellation: U · U = I for self-inverse gates
+      (CX, CZ, ECR)
+
+Each rule is applied by scanning the circuit and checking the most
+recent gate placed on the target qubit(s), removing or merging gates
+where the corresponding identity holds.
+
+More advanced optimizations (e.g., ZX-calculus, peephole optimization)
+can be implemented here.
+A good starting point for improving the overall performance of the transpiler.
+"""
+
+
 EPSILON = 1e-9  # tolerance for float comparisons
 
 def optimize(qc: QuantumCircuit) -> QuantumCircuit:
@@ -63,7 +85,9 @@ def merge_rz_rotations(qc: QuantumCircuit) -> QuantumCircuit:
 
 
 def cancel_two_qubit_gates(qc: QuantumCircuit) -> QuantumCircuit:
+    """Cancel consecutive self-inverse two-qubit gates on the same qubits."""
 
+    #Supported gates for cancellation
     CANCELLABLE = {'cx', 'ecr', 'cz'}
     
     instructions = list(qc.data)
@@ -118,6 +142,7 @@ def cancel_two_qubit_gates(qc: QuantumCircuit) -> QuantumCircuit:
 
 
 def cancel_x_gates(qc: QuantumCircuit) -> QuantumCircuit:
+    """Cancel consecutive X gates on the same qubit."""
 
     instructions = list(qc.data)
     to_remove = set()

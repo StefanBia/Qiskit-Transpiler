@@ -1,6 +1,24 @@
 
 import numpy as np
+"""
+equivalence_library.py
 
+Structured equivalence library for the Translation pass.
+
+Maps each gate to a decomposition function returning its equivalent
+sequence in the backend's native basis. Decompositions are applied
+recursively until all gates are expressed in the target basis set.
+
+Supports major IBM backend families:
+    - Eagle  (e.g., IBM Marrakesh): {ECR, RZ, SX, X, ID}
+    - Heron  (e.g., IBM Fez):       {CZ, RZ, SX, X, ID}
+
+The correct decomposition table is selected automatically based on
+the two-qubit gate reported in the target backend's basis set.
+
+This library is encouraged to be extended with additional equivalence rules for other gates
+and/or additional backend families.
+"""
 
 BASIS_SETS = {
     "eagle":            frozenset({"ecr", "rz", "sx", "x", "id"}),
@@ -8,8 +26,7 @@ BASIS_SETS = {
     "heron_fractional": frozenset({"cz",  "rz", "sx", "x", "id", "rx", "rzz"}),
 }
 
-
-_SINGLE_QUBIT = {
+_SINGLE_QUBIT = { #decompositions for single-qubit gates
 
     "h": lambda q, p: [
         ("rz", [np.pi / 2], [q[0]]),
@@ -75,7 +92,7 @@ _SINGLE_QUBIT = {
     ],
 }
 
-_TWO_QUBIT_ECR = {
+_TWO_QUBIT_ECR = { #decompositions for two-qubit gates in the ECR basis
 
     "cx": lambda q, p: [
         ("rz",  [-np.pi / 2], [q[1]]),
@@ -139,7 +156,7 @@ _TWO_QUBIT_ECR = {
     ],
 }
 
-_TWO_QUBIT_CZ = {
+_TWO_QUBIT_CZ = { #decompositions for two-qubit gates in the CZ basis
 
     "cx": lambda q, p: [
         ("h",  [], [q[1]]),
@@ -202,11 +219,12 @@ _TWO_QUBIT_CZ = {
     ],
 }
 
-
+# Define equivalence tables for each backend family
 EQUIVALENCES_ECR = {**_SINGLE_QUBIT, **_TWO_QUBIT_ECR}
 EQUIVALENCES_CZ  = {**_SINGLE_QUBIT, **_TWO_QUBIT_CZ}
 
-EQUIVALENCES_FOR_BASIS = {
+
+EQUIVALENCES_FOR_BASIS = { #associates each backend family with its corresponding equivalence rules
     "eagle":            EQUIVALENCES_ECR,
     "heron":            EQUIVALENCES_CZ,
     "heron_fractional": EQUIVALENCES_CZ,

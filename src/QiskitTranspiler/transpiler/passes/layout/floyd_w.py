@@ -1,4 +1,7 @@
 class FloydWarshall:
+    """Floyd-Warshall algorithm for finding shortest paths in a weighted graph.
+       Computes the shortest path between the qubits in the backend's coupling map, which is represented as a graph.
+       The algorithm also keeps track of the next hop for each pair of qubits to reconstruct the shortest path."""
     
     def __init__(self, backend):
 

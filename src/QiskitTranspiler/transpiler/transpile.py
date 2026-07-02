@@ -3,8 +3,13 @@ from qiskit import QuantumCircuit
 from QiskitTranspiler.transpiler.passes.translation.translator import translate_circuit
 from QiskitTranspiler.transpiler.passes.optimization.optimization import optimize
 
+"""Main transpilation function that takes a QuantumCircuit and a backend, applies layout, translation, and optimization passes,
+  and returns a physical QuantumCircuit ready for execution on the backend."""
 
 def apply_layout(qc: QuantumCircuit, mapping, num_physical_qubits: int) -> QuantumCircuit:
+    """Apply the given layout mapping to the quantum circuit, producing a new circuit that uses physical qubits from the backend.
+       The final circuit has the same number of qubits as the backend and maps virtual qubits to physical qubits according to the input mapping."""
+
     num_virtual_qubits = qc.num_qubits
     physical_qc = QuantumCircuit(num_physical_qubits, num_virtual_qubits)
     

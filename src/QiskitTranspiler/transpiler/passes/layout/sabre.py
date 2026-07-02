@@ -10,11 +10,14 @@ def sabre(front_layer, coupling_map, mapping, distrance_matrix, dag, fw: FloydWa
         front_layer (list): List of gates in the current front layer.
         coupling_map (CouplingMap): Coupling map of the target backend.
         mapping (Layout): Current mapping of virtual to physical qubits.
-        trials (int): Number of random trials to perform for each candidate swap.
+        distance_matrix (numpy.ndarray): Matrix of distances between physical qubits.
+        dag (DAGCircuit): The directed acyclic graph representing the circuit.
+        fw (FloydWarshall): An instance of the FloydWarshall algorithm for pathfinding.
     Returns:
         swap (tuple): The best swap found, represented as a tuple of physical qubits.
+        resolved_gates (list): List of gates in their order of execution.
     """
-    # print("Distance matrix:\n", distrance_matrix)
+    # print("Distance matrix:\n", distance_matrix)
 
     resolved_gates = []
     layout = [i for i in range(len(mapping))]

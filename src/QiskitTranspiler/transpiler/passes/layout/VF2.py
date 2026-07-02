@@ -1,5 +1,8 @@
 __all__ = ['Graph', 'find_subgraph_match']
 
+"""VF2 Subgraph Isomorphism Algorithm Implementation.
+   Graphs are represented as adjacency lists with optional labels for nodes."""
+
 class Graph:
     def __init__(self):
         self.adj = {}

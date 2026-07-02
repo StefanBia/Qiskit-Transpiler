@@ -11,6 +11,27 @@ from QiskitTranspiler.transpiler.passes.layout.sabre import sabre
 from qiskit.transpiler import CouplingMap
 from qiskit.providers.fake_provider import GenericBackendV2
 
+"""
+layout.py
+
+Layout and routing pass.
+
+Assigns logical qubits to physical qubits on the target backend and
+inserts SWAP gates where needed to satisfy hardware connectivity
+constraints.
+
+Two-stage strategy:
+    1. Attempt a direct embedding via VF2 subgraph isomorphism between
+       the circuit's interaction graph and the backend's coupling map.
+    2. If no direct match is found, compute a noise-aware initial
+       mapping (BFS-based error scoring over readout and two-qubit
+       gate errors) and route with the SABRE algorithm, inserting
+       SWAP gates to satisfy adjacency constraints.
+
+Returns the physical circuit along with the resulting logical-to-
+physical qubit mapping.
+"""
+
 
 class Layout:
     @staticmethod
@@ -30,6 +51,9 @@ class Layout:
 
     @staticmethod
     def run_layout(qc, backend):
+        """Run the layout and routing pass on the given circuit for the specified backend.
+           Main entry point for the layout pass. Returns the routed circuit and the final mapping."""
+
         is_isomorphic, mapping = Layout.initial_isomorphism(qc, backend)
         if is_isomorphic:
             return qc, mapping  # No layout needed, return original circuit and mapping
@@ -76,6 +100,8 @@ class Layout:
     
     @staticmethod
     def initial_isomorphism(qc, backend):
+        """Check if the circuit's interaction graph is isomorphic to the backend's coupling map.
+           If so, return True and the mapping; otherwise, return False and an empty mapping."""
         G1 = Graph()
         G2 = Graph()
 
@@ -102,6 +128,7 @@ class Layout:
     
     @staticmethod
     def circuit_to_DAG(circuit : QuantumCircuit) -> DAG:
+        """Convert a QuantumCircuit to a DAG representation."""
         dag = DAG()
         last_gate_on_qubit = {}
         id_counter_two_qubit = 0
@@ -148,7 +175,10 @@ class Layout:
 
     @staticmethod
     def get_initial_mapping(dag: DAG, backend, qc: QuantumCircuit):
-        # Randomly assign first qubit, then use BFS to assign the rest based on connectivity
+        """Compute an initial mapping of virtual qubits to physical qubits based on BFS traversal of the backend's coupling map.
+           Returns a mapping dictionary {virtual_qubit: physical_qubit}."""
+
+        # Assign best starting qubit, then use BFS to assign the rest based on connectivity
         # Mapping is of type {virtual_qubit: physical_qubit}
         # Ensures no virtual qubits map to the same physical qubit
         starting_qubit = Layout.compute_best_starting_qubit(backend)
@@ -180,6 +210,8 @@ class Layout:
 
     @staticmethod
     def dag_to_circuit(dag: DAG, ordered_ex_gates: list, swaps: list) -> QuantumCircuit:
+        """Convert a DAG representation back to a QuantumCircuit, applying the ordered execution of gates and swaps."""
+
         num_qubits = max(qubit for qubits in dag.qubits.values() for qubit in qubits) + 1
         num_clbits = max(clbit for clbits in dag.classical_bits.values() for clbit in clbits) + 1
         vmap = [i for i in range(num_qubits)]
@@ -211,6 +243,9 @@ class Layout:
         return circuit
 
     def direction_fix(circuit, coupling_map):
+        """Fix the direction of CNOT gates in the circuit to match the backend's coupling map.
+           If a CNOT gate is in the wrong direction, it is replaced with an equivalent sequence of gates."""
+
         direction_fixed_qc = QuantumCircuit(circuit.num_qubits, circuit.num_clbits)
         for instruction in circuit.data:
             op = instruction.operation
@@ -232,6 +267,8 @@ class Layout:
         return direction_fixed_qc
 
     def compute_best_starting_qubit(backend):
+        """Compute the best starting qubit for the initial mapping based on a BFS traversal of the backend's coupling map. (Heuristic approach)
+           The qubit with the highest score (lowest error) is selected as the starting point."""
 
         coupling_map = backend.coupling_map
         two_qubit_gate = 'ecr' if 'ecr' in backend.operation_names else 'cz'
@@ -258,6 +295,9 @@ class Layout:
 
 
     def bfs_sum_error_depth(start, coupling_map, depth, qubit_scores):
+        """Perform a BFS traversal of the coupling map starting from the given qubit, summing the error scores of neighboring qubits up to the specified depth.
+           Returns the cumulative score for the starting qubit based on its neighbors' error rates."""
+
         visited = set()
         queue = [(start, 0)]  # (node, current_depth)
         area_score = 1

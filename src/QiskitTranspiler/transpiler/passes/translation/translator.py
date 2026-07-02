@@ -9,8 +9,13 @@ from qiskit.circuit.library import (
 
 from QiskitTranspiler.transpiler.passes.translation.equivalence_library import BASIS_SETS, EQUIVALENCES_FOR_BASIS
 
+"""
+Basis translator for converting circuits to a target basis. Recursively decomposes gates that are not in the target basis into 
+equivalent sequences of gates that are in the target basis, using equivalence rules defined in equivalence_library.py.
+"""
 
-_GATE_MAP = {
+
+_GATE_MAP = { #maps gate names to their corresponding Qiskit Gate classes or factory functions. This is used to construct Gate objects during translation.
     "rz":   lambda p: RZGate(p[0]),
     "sx":   lambda p: SXGate(),
     "x":    lambda p: XGate(),
@@ -49,6 +54,9 @@ def _translate_gate(
     target_basis: frozenset,
     _depth: int = 0,
 ) -> None:
+    """Recursively translate a gate into the target basis, appending to the output circuit.
+    If the gate is already in the target basis, it is appended directly. Otherwise, it is 
+    decomposed using the equivalence rules and the sub-gates are recursively translated."""
 
     if _depth > 20:
         raise RecursionError(
@@ -95,10 +103,11 @@ def translate_circuit(
     basis=None,
     custom_equivalences: dict = None,
 ) -> QuantumCircuit:
+    """Translate a circuit to a target basis, using equivalence rules defined in equivalence_library.py."""
 
     key = backend or (basis if isinstance(basis, str) else None)
     
-
+    # Determine the target basis and equivalence rules to use for translation
     if isinstance(basis, (list, set, frozenset)) and not isinstance(basis, str):
         target_basis = frozenset(basis)
         if custom_equivalences is not None:
@@ -150,6 +159,7 @@ def translate_circuit(
     if qc.num_clbits > 0:
         out.add_register(*qc.cregs)
 
+    #Iterate over the instructions in the input circuit and translate (if necessary) each gate
     for inst in qc.data:
         name   = inst.operation.name
         params = list(inst.operation.params)

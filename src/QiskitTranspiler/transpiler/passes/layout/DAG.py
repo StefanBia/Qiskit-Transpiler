@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Set, Tuple
 
 
 class DAG:
+    """A simple Directed Acyclic Graph (DAG) representation for quantum circuits, based on gate dependencies."""
     
     def __init__(self):
         self.nodes: Dict[Any, Any] = {}
