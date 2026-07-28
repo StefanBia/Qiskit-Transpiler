@@ -1,4 +1,4 @@
-# QiskitTranspiler
+# Q-te
 
 A lightweight, pedagogical quantum circuit transpiler for NISQ devices.
 
