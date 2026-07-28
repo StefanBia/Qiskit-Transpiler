@@ -30,7 +30,7 @@ The following prerequisites are required:
 Open a terminal and clone the project from GitHub:
 
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
+git clone https://github.com/StefanBia/Q-te
 cd your-repo-name
 ```
 
